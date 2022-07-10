@@ -41,13 +41,11 @@ export type RawCalibrationMeasurementData = {
     values: number[]
 }[]
 
-export type IPartialPressures = Record<string, number>
+export type UniqMolecule = { symbol: string, uniq_amus: number[] }
 
-export type ISensitivities = Record<string, number>
+export type IonCurrentsPerUniqAmu = Array<{ amu: number; ion_current: number; }>
 
-export type ICalibrationFactors = Record<string, number>
-
-export type INormIntensities = Record<string, number>
+export type ProportionObjectForUniq = { symbol: string, amu_proportions: { amus: number[], proportions: number[] } }
 
 export type RecipeRow = {
     id?: string,

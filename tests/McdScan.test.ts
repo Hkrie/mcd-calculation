@@ -1,9 +1,10 @@
 import {
     calcCalibrationFactors,
+    calcConcentrations,
     calcPartialPressures,
     calcProportions,
     getResolveOrder,
-    updatedResolveIonCurrents
+    resolveIonCurrents
 } from "../src/McdScan";
 import {
     calcIonCurrentsForMoleculeAmus,
@@ -141,7 +142,7 @@ test("calcIonCurrentsForMoleculeAmus", ()=>{
     })
 })
 
-test("updatedResolveIonCurrents to return the correct array with resolve Order specified", ()=>{
+test("resolveIonCurrents to return the correct array with and without resolve Order specified", ()=>{
     const testGasMixture = [
         {
             "atomic_masses": [1, 2, 3],
@@ -283,7 +284,75 @@ test("updatedResolveIonCurrents to return the correct array with resolve Order s
             }
         ]
     };
-    expect(updatedResolveIonCurrents(proportions, completeMeasurement, testGasMixture, recipe, resolveOrder)).toStrictEqual([
+    expect(resolveIonCurrents(proportions, completeMeasurement, testGasMixture, recipe, resolveOrder)).toStrictEqual([
+        {
+            "amus": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "ion_currents": [
+                1.6666666666666334,
+                0.6666666666666534,
+                0.99999999999998,
+                3.6666666666665937,
+                0.99999999999998
+            ],
+            "symbol": "test2",
+            "total_ion_current": 7.99999999999984
+        },
+        {
+            "amus": [
+                1,
+                2,
+                3,
+                4,
+                6
+            ],
+            "ion_currents": [
+                5.39999999999992,
+                10.79999999999984,
+                5.39999999999992,
+                2.69999999999996,
+                1.34999999999998
+            ],
+            "symbol": "test3",
+            "total_ion_current": 25.649999999999622
+        },
+        {
+            "amus": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "ion_currents": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "symbol": "test1",
+            "total_ion_current": 0
+        },
+        {
+            "amus": [
+                1,
+                2,
+                3
+            ],
+            "ion_currents": [
+                2.933333333333426,
+                0,
+                0
+            ],
+            "symbol": "test0",
+            "total_ion_current": 2.933333333333426
+        }
+    ])
+    expect(resolveIonCurrents(proportions, completeMeasurement, testGasMixture, recipe)).toStrictEqual([
         {
             "amus": [
                 1,
@@ -1014,7 +1083,3 @@ test("calcCalibrationFactors return the correct array", () => {
         }
     ])
 })
-
-// test("calcConcentrations", ()=>{
-//
-// })

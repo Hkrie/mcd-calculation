@@ -1,1 +1,1 @@
-export { calcProportions, calcCalibrationFactors, calcConcentrations, calcPartialPressures, resolveIonCurrents } from "./McdScan";
+export { calcProportions, calcCalibrationFactors, calcConcentrations, calcPartialPressures, resolveIonCurrents, getResolveOrder } from "./McdScan";

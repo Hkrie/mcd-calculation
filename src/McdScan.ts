@@ -23,7 +23,6 @@ import * as _ from "lodash";
 
 export function calcProportions(recipe: Recipe, calibrationMixture: ICalibrationMixture, completeMeasurement: RawCalibrationMeasurements): Proportions {
     const measurement_data = OptimizeCalibrationMeasurements(recipe, calibrationMixture, completeMeasurement);
-    console.log(measurement_data)
     return calibrationMixture.map(obj => {
         const measurement_data_subset = {
             amus: obj.atomic_masses,
@@ -68,7 +67,7 @@ export function calcCalibrationFactors(calibrationMixture: ICalibrationMixture, 
     return calibrationFactors
 }
 
-export function getResolveOrder(testGasMixture: TestMixture[]) {
+export function getResolveOrder(testGasMixture: TestMixture[]): UniqMolecule[] {
     const resolveOrderSymbols = [];
     let remaining_mixture = [...testGasMixture];
     while (remaining_mixture.length) {
@@ -90,7 +89,7 @@ export function getResolveOrder(testGasMixture: TestMixture[]) {
     return resolveOrderSymbols
 }
 
-export function updatedResolveIonCurrents(proportions: Proportions, lastCompleteMeasurement: RawMeasurement, testGasMixture: TestMixture[], recipe: Recipe, resolveOrder: UniqMolecule[]): ResolvedIonCurrents {
+export function resolveIonCurrents(proportions: Proportions, lastCompleteMeasurement: RawMeasurement, testGasMixture: TestMixture[], recipe: Recipe, resolveOrder?: UniqMolecule[]): ResolvedIonCurrents {
     const measurement_data = newOptimizeMeasurement(recipe, testGasMixture, lastCompleteMeasurement);
     checkProportions(testGasMixture, proportions)
     const ion_currents_per_amu_per_molecule: ResolvedIonCurrents = [];
@@ -115,58 +114,58 @@ export function updatedResolveIonCurrents(proportions: Proportions, lastComplete
     return ion_currents_per_amu_per_molecule
 }
 
-export function resolveIonCurrents(proportions: Proportions, lastCompleteMeasurement: RawMeasurement, testGasMixture: TestMixture[], recipe: Recipe): ResolvedIonCurrents {
-    const measurement_data = newOptimizeMeasurement(recipe, testGasMixture, lastCompleteMeasurement);
-    //check if all substances in testMixture have their proportions defined
-    checkProportions(testGasMixture, proportions)
-    const ion_currents_per_amu_per_molecule: ResolvedIonCurrents = [];
-    const remaining_mixture = [...testGasMixture];
-    while (remaining_mixture.length) {
-
-        const uniq_molecule_amus = getMoleculesWithUniqAmus(remaining_mixture);
-
-        if (uniq_molecule_amus.length === 0) {
-            throw new Error("There are to many overlapps in the atomic masses of the individual substances." +
-                "Therefore the system of equations cannot be solved. Please try to use a different test gas mixture.")
-        }
-
-
-        uniq_molecule_amus.forEach((uniqMolecule) => {
-            const proportion_object_for_uniq = _.flatten(proportions.filter(obj => obj.symbol === uniqMolecule!.symbol))[0];
-            const uniq_ion_currents_per_amu = getIonCurrentsPerUniqAmu(measurement_data, uniqMolecule);
-
-            // const all_ion_currents = proportion_object_for_uniq.amu_proportions.amus.map((amu, index) => {
-            //     const md_index = measurement_data["amus"].indexOf(amu);
-            //     if (uniqMolecule!.uniq_amus.includes(amu)) {
-            //         const ion_current = _.flatten(uniq_ion_currents_per_amu.filter(obj => obj!.amu === amu))[0]!.ion_current;
-            //         measurement_data.ion_currents[md_index] -= ion_current;
-            //         return ion_current;
-            //     } else {// else the ion currents of the element of this amu has to be calculated
-            //         // get index of first uniq amu for the current symbol
-            //         const uniq_index = proportion_object_for_uniq.amu_proportions.amus.indexOf(uniqMolecule!.uniq_amus[0]!);
-            //         const proportion_factor_uniq = proportion_object_for_uniq.amu_proportions.proportions[uniq_index];
-            //         const base_ion_current = _.flatten(uniq_ion_currents_per_amu.filter(obj => obj!.amu === uniqMolecule!.uniq_amus[0]))[0]!.ion_current;
-            //
-            //         const proportion_factor_current_amu = proportion_object_for_uniq.amu_proportions.proportions[index];
-            //         const ion_current = (base_ion_current / proportion_factor_uniq) * proportion_factor_current_amu;
-            //
-            //         measurement_data.ion_currents[md_index] -= ion_current;
-            //         return ion_current
-            //     }
-            // })
-            const all_ion_currents = calcIonCurrentsForMoleculeAmus(proportion_object_for_uniq, measurement_data, uniqMolecule, uniq_ion_currents_per_amu);
-
-            ion_currents_per_amu_per_molecule.push({
-                symbol: uniqMolecule!.symbol,
-                amus: proportion_object_for_uniq.amu_proportions.amus,
-                ion_currents: all_ion_currents,
-                total_ion_current: _.sum(all_ion_currents)
-            })
-            _.remove(remaining_mixture, obj => obj.symbol === uniqMolecule!.symbol)
-        })
-    }
-    return ion_currents_per_amu_per_molecule
-}
+// export function resolveIonCurrents(proportions: Proportions, lastCompleteMeasurement: RawMeasurement, testGasMixture: TestMixture[], recipe: Recipe): ResolvedIonCurrents {
+//     const measurement_data = newOptimizeMeasurement(recipe, testGasMixture, lastCompleteMeasurement);
+//     //check if all substances in testMixture have their proportions defined
+//     checkProportions(testGasMixture, proportions)
+//     const ion_currents_per_amu_per_molecule: ResolvedIonCurrents = [];
+//     const remaining_mixture = [...testGasMixture];
+//     while (remaining_mixture.length) {
+//
+//         const uniq_molecule_amus = getMoleculesWithUniqAmus(remaining_mixture);
+//
+//         if (uniq_molecule_amus.length === 0) {
+//             throw new Error("There are to many overlapps in the atomic masses of the individual substances." +
+//                 "Therefore the system of equations cannot be solved. Please try to use a different test gas mixture.")
+//         }
+//
+//
+//         uniq_molecule_amus.forEach((uniqMolecule) => {
+//             const proportion_object_for_uniq = _.flatten(proportions.filter(obj => obj.symbol === uniqMolecule!.symbol))[0];
+//             const uniq_ion_currents_per_amu = getIonCurrentsPerUniqAmu(measurement_data, uniqMolecule);
+//
+//             // const all_ion_currents = proportion_object_for_uniq.amu_proportions.amus.map((amu, index) => {
+//             //     const md_index = measurement_data["amus"].indexOf(amu);
+//             //     if (uniqMolecule!.uniq_amus.includes(amu)) {
+//             //         const ion_current = _.flatten(uniq_ion_currents_per_amu.filter(obj => obj!.amu === amu))[0]!.ion_current;
+//             //         measurement_data.ion_currents[md_index] -= ion_current;
+//             //         return ion_current;
+//             //     } else {// else the ion currents of the element of this amu has to be calculated
+//             //         // get index of first uniq amu for the current symbol
+//             //         const uniq_index = proportion_object_for_uniq.amu_proportions.amus.indexOf(uniqMolecule!.uniq_amus[0]!);
+//             //         const proportion_factor_uniq = proportion_object_for_uniq.amu_proportions.proportions[uniq_index];
+//             //         const base_ion_current = _.flatten(uniq_ion_currents_per_amu.filter(obj => obj!.amu === uniqMolecule!.uniq_amus[0]))[0]!.ion_current;
+//             //
+//             //         const proportion_factor_current_amu = proportion_object_for_uniq.amu_proportions.proportions[index];
+//             //         const ion_current = (base_ion_current / proportion_factor_uniq) * proportion_factor_current_amu;
+//             //
+//             //         measurement_data.ion_currents[md_index] -= ion_current;
+//             //         return ion_current
+//             //     }
+//             // })
+//             const all_ion_currents = calcIonCurrentsForMoleculeAmus(proportion_object_for_uniq, measurement_data, uniqMolecule, uniq_ion_currents_per_amu);
+//
+//             ion_currents_per_amu_per_molecule.push({
+//                 symbol: uniqMolecule!.symbol,
+//                 amus: proportion_object_for_uniq.amu_proportions.amus,
+//                 ion_currents: all_ion_currents,
+//                 total_ion_current: _.sum(all_ion_currents)
+//             })
+//             _.remove(remaining_mixture, obj => obj.symbol === uniqMolecule!.symbol)
+//         })
+//     }
+//     return ion_currents_per_amu_per_molecule
+// }
 
 export function calcConcentrations(testGasMixture: TestMixture[], calibrationFactors: CalibrationFactors, resolvedIonCurrents: ResolvedIonCurrents): Concentrations {
     const norm_ion_currents = calcNormIonCurrents(resolvedIonCurrents, calibrationFactors);

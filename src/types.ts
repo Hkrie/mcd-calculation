@@ -26,13 +26,23 @@ export type RawMeasurement = {
 }
 
 export type RawCalibrationMeasurements = {
-    name: "got",
-    origin: "/mmsp/measurement/scans"
+    name: string,
+    origin: string,
     data: {
         scannum: number,
         scansize: number,
         values: number[]
     }[]
+}
+
+export type x = {
+    data: {
+        scansize: number;
+        values: number[];
+        scannum: number
+    }[];
+    origin: string;
+    name: string
 }
 
 export type RawCalibrationMeasurementData = {

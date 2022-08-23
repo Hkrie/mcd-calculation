@@ -15,16 +15,21 @@ const convertToAbsoluteValueArray = (array: number[]) => {
     return array.map(Math.abs);
 }
 
+const isCompleteScan = (value:number[], allowedLengthOfArrays:number) =>{
+    return value.length === allowedLengthOfArrays
+}
+
 const calcAverageValueArray = (array: number[][], allowedLengthOfArrays: number) => {
     const average_values = [];
-    for (let i = 0; i < array.length; i++) {
+    for (let i = 0; i < array[0].length; i++) {
         const ion_currents_of_amu: number[] = [];
         array.forEach((value, index) => {
             //check if the measurement scan was complete and if so get the value
-            if (value.length === allowedLengthOfArrays) {
+            if (isCompleteScan(value, allowedLengthOfArrays)) {
                 ion_currents_of_amu.push(value[i])
             }
         })
+
         const average_value = _.sum(convertToAbsoluteValueArray(ion_currents_of_amu)) / ion_currents_of_amu.length;
         average_values.push(average_value)
     }
@@ -41,9 +46,8 @@ export function OptimizeCalibrationMeasurements(
     completeMeasurement: RawCalibrationMeasurements
 ): OptimizedMeasurementData {
     const amus_of_calibration_measurement: number[] = recipe.rows.slice(1).map(row => row.mass!);
-    const raw_values = removePressureData(completeMeasurement.data)
-    const average_ion_currents = calcAverageValueArray(raw_values, amus_of_calibration_measurement.length)
-
+    const raw_values = removePressureData(completeMeasurement.data);
+    const average_ion_currents = calcAverageValueArray(raw_values, amus_of_calibration_measurement.length);
     return {
         amus: amus_of_calibration_measurement,
         ion_currents: average_ion_currents
@@ -158,6 +162,9 @@ export function calcIonCurrentsForMoleculeAmus(
             const ion_current = (base_ion_current / proportion_factor_uniq) * proportion_factor_current_amu;
 
             measurementData.ion_currents[md_index] -= ion_current;
+            if(measurementData.ion_currents[md_index] < 0){
+                measurementData.ion_currents[md_index] = 0;
+            }
             return ion_current
         }
     })
@@ -171,4 +178,9 @@ export function checkProportions(testGasMixture: TestMixture[], proportions: Pro
                 "Please make sure that all substances in the test mixture where predefined in the calibration measurement (also with the same atomic masses!).")
         }
     })
+}
+
+export function getSensitivityOf100PercentPeakOfReferenceSymbol (sensitivities:Sensitivities, referenceSymbol:string){
+    const reference_sensitivities = sensitivities.filter(obj => obj.symbol === referenceSymbol);
+    return Math.max(...reference_sensitivities.map(o => o.sensitivity))
 }

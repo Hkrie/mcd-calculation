@@ -22,23 +22,43 @@ export declare type RawMeasurement = {
     };
 };
 export declare type RawCalibrationMeasurements = {
-    name: "got";
-    origin: "/mmsp/measurement/scans";
+    name: string;
+    origin: string;
     data: {
         scannum: number;
         scansize: number;
         values: number[];
     }[];
 };
+export declare type x = {
+    data: {
+        scansize: number;
+        values: number[];
+        scannum: number;
+    }[];
+    origin: string;
+    name: string;
+};
 export declare type RawCalibrationMeasurementData = {
     scannum: number;
     scansize: number;
     values: number[];
 }[];
-export declare type IPartialPressures = Record<string, number>;
-export declare type ISensitivities = Record<string, number>;
-export declare type ICalibrationFactors = Record<string, number>;
-export declare type INormIntensities = Record<string, number>;
+export declare type UniqMolecule = {
+    symbol: string;
+    uniq_amus: number[];
+};
+export declare type IonCurrentsPerUniqAmu = Array<{
+    amu: number;
+    ion_current: number;
+}>;
+export declare type ProportionObjectForUniq = {
+    symbol: string;
+    amu_proportions: {
+        amus: number[];
+        proportions: number[];
+    };
+};
 export declare type RecipeRow = {
     id?: string;
     dwell?: number;

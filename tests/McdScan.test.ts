@@ -3,12 +3,12 @@ import {
     calcConcentrations,
     calcPartialPressures,
     calcProportions,
+    calcSensitivities,
     getResolveOrder,
     resolveIonCurrents
 } from "../src/McdScan";
 import {
     calcIonCurrentsForMoleculeAmus,
-    calcSensitivities,
     getIonCurrentsPerUniqAmu,
     getSensitivityOf100PercentPeakOfReferenceSymbol,
     OptimizeCalibrationMeasurements
@@ -21,7 +21,8 @@ export {
     calcConcentrations,
     calcPartialPressures,
     resolveIonCurrents,
-    getResolveOrder
+    getResolveOrder,
+    calcSensitivities
 } from "../src/McdScan";
 
 test("getResolveOrder returns the correct order to resolve the gas mixture", () => {
@@ -718,96 +719,6 @@ test("OptimizeCalibrationMeasurements return the correct array", () => {
     })
 })
 
-test("calcSensitivities return the correct array", () => {
-    const calibrationMixture = [
-        {
-            "atomic_masses": [1, 2, 3],
-            "symbol": "test0",
-            concentration: 10
-        },
-        {
-            "atomic_masses": [4, 5],
-            "symbol": "test1",
-            concentration: 20
-        },
-        {
-            "atomic_masses": [6, 7],
-            "symbol": "test2",
-            concentration: 30
-        },
-        {
-            "atomic_masses": [8],
-            "symbol": "test3",
-            concentration: 40
-        }];
-
-    const partialPressures = [
-        {
-            "partialPressure": 5 * 10 ** -5 * 10,
-            "symbol": "test0"
-        },
-        {
-            "partialPressure": 5 * 10 ** -5 * 20,
-            "symbol": "test1"
-        },
-        {
-            "partialPressure": 5 * 10 ** -5 * 30,
-            "symbol": "test2"
-        },
-        {
-            "partialPressure": 5 * 10 ** -5 * 40,
-            "symbol": "test3"
-        }
-    ];
-    const optimizedMeasurementData = {
-        "amus": [1, 2, 3, 4, 5, 6, 7, 8],
-        "ion_currents": [10, 2, 3, 5, 1, 1.35, 3.4, 1.23]
-    };
-
-    expect(calcSensitivities(calibrationMixture, partialPressures, optimizedMeasurementData)).toStrictEqual([
-        {
-            "amu": 1,
-            "sensitivity": optimizedMeasurementData.ion_currents[0] / partialPressures[0].partialPressure,
-            "symbol": "test0"
-        },
-        {
-            "amu": 2,
-            "sensitivity": optimizedMeasurementData.ion_currents[1] / partialPressures[0].partialPressure,
-            "symbol": "test0"
-        },
-        {
-            "amu": 3,
-            "sensitivity": optimizedMeasurementData.ion_currents[2] / partialPressures[0].partialPressure,
-            "symbol": "test0"
-        },
-        {
-            "amu": 4,
-            "sensitivity": optimizedMeasurementData.ion_currents[3] / partialPressures[1].partialPressure,
-            "symbol": "test1"
-        },
-        {
-            "amu": 5,
-            "sensitivity": optimizedMeasurementData.ion_currents[4] / partialPressures[1].partialPressure,
-            "symbol": "test1"
-        },
-        {
-            "amu": 6,
-            "sensitivity": optimizedMeasurementData.ion_currents[5] / partialPressures[2].partialPressure,
-            "symbol": "test2"
-        },
-        {
-            "amu": 7,
-            "sensitivity": optimizedMeasurementData.ion_currents[6] / partialPressures[2].partialPressure,
-            "symbol": "test2"
-        },
-        {
-            "amu": 8,
-            "sensitivity": optimizedMeasurementData.ion_currents[7] / partialPressures[3].partialPressure,
-            "symbol": "test3"
-        }
-    ])
-})
-
 test("getSensitivityOf100PercentPeakOfReferenceSymbol", () => {
     const partialPressures = [
         {
@@ -881,7 +792,103 @@ test("getSensitivityOf100PercentPeakOfReferenceSymbol", () => {
 })
 
 test("calcCalibrationFactors return the correct array", () => {
+    const referenceElementSymbol = "test0";
+    const sensitivities =[
+        {
+            "amu": 1,
+            "sensitivity": 4000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 2,
+            "sensitivity": 18000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 3,
+            "sensitivity": 6000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 4,
+            "sensitivity": 5000,
+            "symbol": "test1"
+        },
+        {
+            "amu": 5,
+            "sensitivity": 1000,
+            "symbol": "test1"
+        },
+        {
+            "amu": 6,
+            "sensitivity": 900.0000000000002,
+            "symbol": "test2"
+        },
+        {
+            "amu": 7,
+            "sensitivity": 2266.666666666667,
+            "symbol": "test2"
+        },
+        {
+            "amu": 8,
+            "sensitivity": 615,
+            "symbol": "test3"
+        }
+    ];
 
+    expect(calcCalibrationFactors(sensitivities, referenceElementSymbol)).toStrictEqual([
+        {
+            "amu": 1,
+            "calibrationFactor": sensitivities[0].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 4000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 2,
+            "calibrationFactor": sensitivities[1].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 18000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 3,
+            "calibrationFactor": sensitivities[2].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 6000,
+            "symbol": "test0"
+        },
+        {
+            "amu": 4,
+            "calibrationFactor": sensitivities[3].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 5000,
+            "symbol": "test1"
+        },
+        {
+            "amu": 5,
+            "calibrationFactor": sensitivities[4].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 1000,
+            "symbol": "test1"
+        },
+        {
+            "amu": 6,
+            "calibrationFactor": sensitivities[5].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 900.0000000000002,
+            "symbol": "test2"
+        },
+        {
+            "amu": 7,
+            "calibrationFactor": sensitivities[6].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 2266.666666666667,
+            "symbol": "test2"
+        },
+        {
+            "amu": 8,
+            "calibrationFactor": sensitivities[7].sensitivity / sensitivities[1].sensitivity,
+            "sensitivity": 615,
+            "symbol": "test3"
+        }
+    ])
+})
+
+test("calcSensitivities", ()=>{
     const calibrationMixture = [
         {
             "atomic_masses": [1, 2, 3],
@@ -983,13 +990,14 @@ test("calcCalibrationFactors return the correct array", () => {
             "symbol": "test3"
         }
     ];
-    const referenceElementSymbol = "test0";
 
+    //this parameter is just needed for dynamic testing
     const optimizedMeasurementData = {
         "amus": [1, 2, 3, 4, 5, 6, 7, 8],
         "ion_currents": [2, 9, 3, 5, 1, 1.35, 3.4, 1.23]
     };
-    const sensitivities = [
+
+    expect(calcSensitivities(calibrationMixture, recipe, completeMeasurement, partialPressures)).toStrictEqual([
         {
             "amu": 1,
             "sensitivity": optimizedMeasurementData.ion_currents[0] / partialPressures[0].partialPressure,
@@ -1030,56 +1038,5 @@ test("calcCalibrationFactors return the correct array", () => {
             "sensitivity": optimizedMeasurementData.ion_currents[7] / partialPressures[3].partialPressure,
             "symbol": "test3"
         }
-    ];
-
-    expect(calcCalibrationFactors(calibrationMixture, recipe, completeMeasurement, partialPressures, referenceElementSymbol)).toStrictEqual([
-        {
-            "amu": 1,
-            "calibrationFactor": sensitivities[0].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 4000,
-            "symbol": "test0"
-        },
-        {
-            "amu": 2,
-            "calibrationFactor": sensitivities[1].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 18000,
-            "symbol": "test0"
-        },
-        {
-            "amu": 3,
-            "calibrationFactor": sensitivities[2].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 6000,
-            "symbol": "test0"
-        },
-        {
-            "amu": 4,
-            "calibrationFactor": sensitivities[3].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 5000,
-            "symbol": "test1"
-        },
-        {
-            "amu": 5,
-            "calibrationFactor": sensitivities[4].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 1000,
-            "symbol": "test1"
-        },
-        {
-            "amu": 6,
-            "calibrationFactor": sensitivities[5].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 900.0000000000002,
-            "symbol": "test2"
-        },
-        {
-            "amu": 7,
-            "calibrationFactor": sensitivities[6].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 2266.666666666667,
-            "symbol": "test2"
-        },
-        {
-            "amu": 8,
-            "calibrationFactor": sensitivities[7].sensitivity / sensitivities[1].sensitivity,
-            "sensitivity": 615,
-            "symbol": "test3"
-        }
-    ])
+    ]);
 })

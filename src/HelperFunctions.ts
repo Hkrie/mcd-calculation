@@ -1,21 +1,27 @@
 import * as _ from "lodash";
 import {
     CalibrationFactors,
-    ICalibrationMixture, IonCurrentsPerUniqAmu,
+    IonCurrentsPerUniqAmu,
     Mixture,
     OptimizedMeasurementData,
-    PartialPressures, ProportionObjectForUniq,
-    Proportions, RawCalibrationMeasurementData, RawCalibrationMeasurements,
+    PartialPressures,
+    ProportionObjectForUniq,
+    Proportions,
+    RawCalibrationMeasurementData,
+    RawCalibrationMeasurements,
     RawMeasurement,
-    Recipe, ResolvedIonCurrents, Sensitivities,
-    TestMixture, UniqMolecule
+    Recipe,
+    ResolvedIonCurrents,
+    Sensitivities,
+    TestMixture,
+    UniqMolecule
 } from "./types";
 
 const convertToAbsoluteValueArray = (array: number[]) => {
     return array.map(Math.abs);
 }
 
-const isCompleteScan = (value:number[], allowedLengthOfArrays:number) =>{
+const isCompleteScan = (value: number[], allowedLengthOfArrays: number) => {
     return value.length === allowedLengthOfArrays
 }
 
@@ -75,23 +81,9 @@ export function getPartialPressureForSymbol(partialPressures: PartialPressures, 
     return partialPressures.filter(pp_obj => pp_obj.symbol === symbol)[0]["partialPressure"]
 }
 
-function getIonCurrentForAmu(measurementData: OptimizedMeasurementData, amu: number) {
+export function getIonCurrentForAmu(measurementData: OptimizedMeasurementData, amu: number) {
     const index = measurementData["amus"].indexOf(amu);
     return measurementData["ion_currents"][index]
-}
-
-export function calcSensitivities(calibrationMixture: ICalibrationMixture, partialPressures: PartialPressures, measurementData: OptimizedMeasurementData): Sensitivities {
-    return _.flatten(calibrationMixture.map(obj => {
-        const partial_pressure = getPartialPressureForSymbol(partialPressures, obj.symbol);
-        return obj.atomic_masses.map(amu => {
-            const ion_current = getIonCurrentForAmu(measurementData, amu);
-            return {
-                symbol: obj.symbol,
-                amu: amu,
-                sensitivity: ion_current / partial_pressure
-            }
-        })
-    }))
 }
 
 export function getMoleculesWithUniqAmus(remainingMixture: TestMixture[]): Array<UniqMolecule> {
@@ -162,7 +154,7 @@ export function calcIonCurrentsForMoleculeAmus(
             const ion_current = (base_ion_current / proportion_factor_uniq) * proportion_factor_current_amu;
 
             measurementData.ion_currents[md_index] -= ion_current;
-            if(measurementData.ion_currents[md_index] < 0){
+            if (measurementData.ion_currents[md_index] < 0) {
                 measurementData.ion_currents[md_index] = 0;
             }
             return ion_current
@@ -180,7 +172,7 @@ export function checkProportions(testGasMixture: TestMixture[], proportions: Pro
     })
 }
 
-export function getSensitivityOf100PercentPeakOfReferenceSymbol (sensitivities:Sensitivities, referenceSymbol:string){
+export function getSensitivityOf100PercentPeakOfReferenceSymbol(sensitivities: Sensitivities, referenceSymbol: string) {
     const reference_sensitivities = sensitivities.filter(obj => obj.symbol === referenceSymbol);
     return Math.max(...reference_sensitivities.map(o => o.sensitivity))
 }

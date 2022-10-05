@@ -1,5 +1,5 @@
 {
-  "name": "prismapro-mcd-calculation-ts",
+  "name": "mcd-calculation",
   "version": "1.0.0",
   "description": "",
   "main": "build/index.js",
